@@ -1,61 +1,28 @@
+import java.util.Collection;
+import java.util.HashMap;
+
 public class PhotoManager {
 
-    LinkedList<Photo> photos;
+    private HashMap<String, Photo> photos;
 
     public PhotoManager() {
-        photos = new LinkedList<Photo>();
+        photos = new HashMap<>();
     }
 
     public void addPhoto(Photo p) {
-        if (!IsPhototAvailable(p.getPath(), photos)) {
-            photos.insert(p);
-        }
-    }
-
-    private boolean IsPhototAvailable(String p, LinkedList<Photo> list) {
-        if (list.empty()) 
-            return false;
-
-        list.findFirst();
-        while (!list.last()) {
-            if (list.retrieve().getPath().compareToIgnoreCase(p) == 0)
-                return true;
-            list.findNext();
-        }
-
-        if (list.retrieve().getPath().compareToIgnoreCase(p) == 0)
-            return true;
-
-        return false;
+        
+        photos.putIfAbsent(p.getPath().toLowerCase(), p);
     }
 
     public void deletePhoto(String path) {
-        if (!IsPhototAvailable(path, photos))
-            return;
-
-        if (!photos.empty()) {
-            boolean found = false;
-
-            photos.findFirst();
-            while (!found && !photos.last()) {
-                Photo p = photos.retrieve();
-                if (p.getPath().compareToIgnoreCase(path) == 0) {
-                    found = true;
-                    photos.remove();
-                }
-                photos.findNext();
-            }
-
-            if (!found) {
-                Photo p = photos.retrieve();
-                if (p.getPath().compareToIgnoreCase(path) == 0) {
-                    photos.remove();
-                }
-            }
-        }
+        photos.remove(path.toLowerCase());
     }
 
-    public LinkedList<Photo> getPhotos() {
-        return photos;
+    public Collection<Photo> getPhotos() {
+        return photos.values(); 
+    }
+
+    public boolean isPhotoAvailable(String path) {
+        return photos.containsKey(path.toLowerCase());
     }
 }
