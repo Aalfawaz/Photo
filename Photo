@@ -1,7 +1,7 @@
 public class Photo {
 
     private String path;
-    LinkedList<String> allTags = new LinkedList<>();
+    LinkedList<String> photoTags = new LinkedList<>();
 
     public Photo(String path, LinkedList<String> tags) {
         this.path = path;
@@ -9,10 +9,10 @@ public class Photo {
         if (!tags.empty()) {
             tags.findFirst();
             while (!tags.last()) {
-                allTags.insert(tags.retrieve());
+                photoTags.insert(tags.retrieve());
                 tags.findNext();
             }
-            allTags.insert(tags.retrieve());
+            photoTags.insert(tags.retrieve());
         }
     }
 
@@ -21,30 +21,30 @@ public class Photo {
     }
 
     public LinkedList<String> getTags() {
-        LinkedList<String> tagsNew = new LinkedList<>();
+        LinkedList<String> copiedTags = new LinkedList<>();
 
-        if (!allTags.empty()) {
-            allTags.findFirst();
-            while (!allTags.last()) {
-                tagsNew.insert(allTags.retrieve());
-                allTags.findNext();
+        if (!photoTags.empty()) {
+            photoTags.findFirst();
+            while (!photoTags.last()) {
+                copiedTags.insert(photoTags.retrieve());
+                photoTags.findNext();
             }
-            tagsNew.insert(allTags.retrieve());
+            copiedTags.insert(photoTags.retrieve());
         }
-        return tagsNew;
+        return copiedTags;
     }
 
     @Override
     public String toString() {
-        String str = "Photo{path=" + path + ", allTags=";
+        String str = "Photo{path=" + path + ", photoTags=";
 
-        if (!allTags.empty()) {
-            allTags.findFirst();
-            while (!allTags.last()) {
-                str += allTags.retrieve() + "; ";
-                allTags.findNext();
+        if (!photoTags.empty()) {
+            photoTags.findFirst();
+            while (!photoTags.last()) {
+                str += photoTags.retrieve() + "; ";
+                photoTags.findNext();
             }
-            str += allTags.retrieve();
+            str += photoTags.retrieve();
         }
 
         str += "}";
