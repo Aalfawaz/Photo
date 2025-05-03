@@ -1,1 +1,192 @@
-.
+import java.util.Scanner;
+
+public class Album2 {
+    private String name;
+    private String condition;
+    private PhotoManager manager;
+    private InvIndexPhotoManager invmanager;
+    private int NbComps;
+
+    public Album1(String name, String condition, PhotoManager manager, InvIndexPhotoManager invmanager) {
+        this.name = name;
+        this.condition = condition;
+        this.manager = manager;
+        this.invmanager = invmanager;
+        NbComps = 0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public PhotoManager getManager() {
+        return manager;
+    }
+
+    public int getNbComps() {
+        return NbComps;
+    }
+
+    public LinkedList<Photo> getPhotos() {
+        int choice = menu();
+        LinkedList<Photo> result = new LinkedList<Photo>();
+        switch (choice) {
+            case 1:
+                result = getPhotosLL();
+                break;
+            default:
+                result = getPhotosBST();
+        }
+        return result;
+    }
+
+    private LinkedList<Photo> getPhotosLL() {
+        LinkedList<Photo> resultPhotos = new LinkedList<Photo>();
+        LinkedList<Photo> photos1 = manager.getPhotos();
+        if (!photos1.empty()) {
+            photos1.findFirst();
+            while (!photos1.last()) {
+                resultPhotos.insert(new Photo(photos1.retrieve().getPath(), photos1.retrieve().getTags()));
+                photos1.findNext();
+            }
+            resultPhotos.insert(new Photo(photos1.retrieve().getPath(), photos1.retrieve().getTags()));
+        }
+        NbComps = 0;
+
+        if (this.condition.compareTo("") != 0) {
+            String[] Array = condition.split(" AND ");
+            resultPhotos.findFirst();
+            while (!resultPhotos.last()) {
+                Photo photo = resultPhotos.retrieve();
+                if (!allAvilable(photo.photoTags, Array))
+                    resultPhotos.remove();
+                else
+                    resultPhotos.findNext();
+            }
+            Photo photoLast = resultPhotos.retrieve();
+            if (!allAvilable(photoLast.photoTags, Array))
+                resultPhotos.remove();
+        }
+        return resultPhotos;
+    }
+
+    private boolean allAvilable(LinkedList<String> photoTags, String[] Array) {
+        boolean isValid = true;
+        if (photoTags.empty())
+            isValid = false;
+        else {
+            for (int i = 0; i < Array.length && isValid; i++) {
+                boolean found_in_tags = false;
+                photoTags.findFirst();
+                while (!photoTags.last()) {
+                    this.NbComps++;
+                    if (photoTags.retrieve().compareToIgnoreCase(Array[i]) == 0) {
+                        found_in_tags = true;
+                        break;
+                    }
+                    photoTags.findNext();
+                }
+                if (!found_in_tags) {
+                    this.NbComps++;
+                    if (photoTags.retrieve().compareToIgnoreCase(Array[i]) == 0)
+                        found_in_tags = true;
+                }
+                if (!found_in_tags)
+                    isValid = false;
+            }
+        }
+        return isValid;
+    }
+
+    private LinkedList<Photo> getPhotosBST() {
+        BST<LinkedList<Photo>> photosBST = invmanager.getPhotos();
+        LinkedList<Photo> resultPhotos = new LinkedList<Photo>();
+        NbComps = 0;
+        String[] tags;
+
+        if (this.condition.compareTo("") == 0) {
+            if (photosBST.findkey(" "))
+                resultPhotos = photosBST.retrieve();
+        } else {
+            tags = condition.split(" AND ");
+            for (int i = 0; i < tags.length; i++) {
+                if (photosBST.findkey(tags[i])) {
+                    if (i == 0) {
+                        LinkedList<Photo> miniTag = photosBST.retrieve();
+                        miniTag.findFirst();
+                        while (!miniTag.last()) {
+                            resultPhotos.insert(miniTag.retrieve());
+                            miniTag.findNext();
+                        }
+                        resultPhotos.insert(miniTag.retrieve());
+                    } else
+                        resultPhotos = intersect(resultPhotos, photosBST.retrieve());
+                } else {
+                    resultPhotos = new LinkedList<Photo>();
+                    break;
+                }
+            }
+        }
+        return resultPhotos;
+    }
+
+    private LinkedList<Photo> intersect(LinkedList<Photo> list1, LinkedList<Photo> list2) {
+        LinkedList<Photo> result = new LinkedList<Photo>();
+        if (list1.empty())
+            return result;
+        if (list2.empty())
+            return list1;
+
+        list2.findFirst();
+        while (!list2.last()) {
+            boolean found = false;
+            list1.findFirst();
+            while (!list1.last() && !found) {
+                NbComps++;
+                if (list2.retrieve().getPath().compareToIgnoreCase(list1.retrieve().getPath()) == 0)
+                    found = true;
+                list1.findNext();
+            }
+            if (!found) {
+                NbComps++;
+                if (list2.retrieve().getPath().compareToIgnoreCase(list1.retrieve().getPath()) == 0)
+                    found = true;
+            }
+            if (found)
+                result.insert(list2.retrieve());
+            list2.findNext();
+        }
+
+        boolean found = false;
+        list1.findFirst();
+        while (!list1.last() && !found) {
+            NbComps++;
+            if (list2.retrieve().getPath().compareToIgnoreCase(list1.retrieve().getPath()) == 0)
+                found = true;
+            list1.findNext();
+        }
+        if (!found) {
+            NbComps++;
+            if (list2.retrieve().getPath().compareToIgnoreCase(list1.retrieve().getPath()) == 0)
+                found = true;
+        }
+        if (found)
+            result.insert(list2.retrieve());
+
+        return result;
+    }
+
+    private int menu() {
+        Scanner input = new Scanner(System.in);
+        int choice;
+        System.out.println("1. Linked List");
+        System.out.println("2. BST");
+        System.out.println("Enter your choice: ");
+        choice = input.nextInt();
+        return choice;
+    }
+}
