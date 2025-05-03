@@ -1,4 +1,5 @@
 public class BST<T> {
+
     public class BSTNode<T> {
         public String key;
         public T data;
@@ -18,6 +19,16 @@ public class BST<T> {
         }
     }
 
+    private class RemoveResult {
+        BSTNode<T> node;
+        boolean removed;
+
+        RemoveResult(BSTNode<T> node, boolean removed) {
+            this.node = node;
+            this.removed = removed;
+        }
+    }
+
     BSTNode<T> root, current;
     String AllKeys;
 
@@ -34,7 +45,7 @@ public class BST<T> {
     }
 
     public T retrieve() {
-        return current.data;
+        return current != null ? current.data : null;
     }
 
     public boolean findkey(String tkey) {
@@ -68,7 +79,7 @@ public class BST<T> {
             return false;
         }
 
-        p = new BSTNode<T>(k, val);
+        p = new BSTNode<>(k, val);
         if (empty()) {
             root = current = p;
             return true;
@@ -83,36 +94,38 @@ public class BST<T> {
     }
 
     public boolean remove_key(String tkey) {
-        boolean removed = false;
-        BSTNode<T> p = remove_aux(tkey, root, removed);
-        current = root = p;
-        return removed;
+        RemoveResult result = remove_aux(tkey, root);
+        root = result.node;
+        current = root;
+        return result.removed;
     }
 
-    private BSTNode<T> remove_aux(String key, BSTNode<T> p, boolean flag) {
-        BSTNode<T> q, child = null;
+    private RemoveResult remove_aux(String key, BSTNode<T> p) {
         if (p == null)
-            return null;
-        if (key.compareToIgnoreCase(p.key) < 0)
-            p.left = remove_aux(key, p.left, flag);
-        else if (key.compareToIgnoreCase(p.key) > 0)
-            p.right = remove_aux(key, p.right, flag);
-        else {
-            flag = true;
+            return new RemoveResult(null, false);
+
+        if (key.compareToIgnoreCase(p.key) < 0) {
+            RemoveResult result = remove_aux(key, p.left);
+            p.left = result.node;
+            return new RemoveResult(p, result.removed);
+        } else if (key.compareToIgnoreCase(p.key) > 0) {
+            RemoveResult result = remove_aux(key, p.right);
+            p.right = result.node;
+            return new RemoveResult(p, result.removed);
+        } else {
+            // Node to remove found
             if (p.left != null && p.right != null) {
-                q = find_min(p.right);
+                BSTNode<T> q = find_min(p.right);
                 p.key = q.key;
                 p.data = q.data;
-                p.right = remove_aux(q.key, p.right, flag);
+                RemoveResult result = remove_aux(q.key, p.right);
+                p.right = result.node;
+                return new RemoveResult(p, true);
             } else {
-                if (p.right == null)
-                    child = p.left;
-                else if (p.left == null)
-                    child = p.right;
-                return child;
+                BSTNode<T> child = (p.left != null) ? p.left : p.right;
+                return new RemoveResult(child, true);
             }
         }
-        return p;
     }
 
     private BSTNode<T> find_min(BSTNode<T> p) {
@@ -125,74 +138,31 @@ public class BST<T> {
     }
 
     public boolean update(String key, T data) {
+        if (current == null) {
+            return false;  // safer: no current to remove
+        }
         remove_key(current.key);
         return insert(key, data);
     }
 
-    public boolean removeKey(String k) {
-        String k1 = k;
-        BSTNode<T> p = root;
-        BSTNode<T> q = null;
-
-        while (p != null) {
-            if (k1.compareToIgnoreCase(p.key) < 0) {
-                q = p;
-                p = p.left;
-            } else if (k1.compareToIgnoreCase(p.key) > 0) {
-                q = p;
-                p = p.right;
-            } else {
-                if ((p.left != null) && (p.right != null)) {
-                    BSTNode<T> min = p.right;
-                    q = p;
-                    while (min.left != null) {
-                        q = min;
-                        min = min.left;
-                    }
-                    p.key = min.key;
-                    p.data = min.data;
-                    k1 = min.key;
-                    p = min;
-                }
-
-                if (p.left != null) {
-                    p = p.left;
-                } else {
-                    p = p.right;
-                }
-
-                if (q == null) {
-                    root = p;
-                } else {
-                    if (k1.compareToIgnoreCase(q.key) < 0) {
-                        q.left = p;
-                    } else {
-                        q.right = p;
-                    }
-                }
-                current = root;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public String inOrder() {
+    public String preOrder() {
         AllKeys = "";
         if (root != null)
-            inorder(root);
+            preorder(root);
         return AllKeys;
     }
 
-    private void inorder(BSTNode<T> p) {
-        if (p.left != null)
-            inorder(p.left);
-        if (AllKeys.equals(""))
-            AllKeys = p.key;
-        else
-            AllKeys += " AND " + p.key;
-        if (p.right != null)
-            inorder(p.right);
+    private void preorder(BSTNode<T> p) {
+        if (p != null) {
+            if (AllKeys.equals(""))
+                AllKeys = p.key;
+            else
+                AllKeys += " AND " + p.key;
+
+            if (p.left != null)
+                preorder(p.left);
+            if (p.right != null)
+                preorder(p.right);
+        }
     }
-}
 }
